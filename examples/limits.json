@@ -1,0 +1,5 @@
+{
+  "hop_limit": 6,
+  "ttl_hours": 24,
+  "max_starts_per_day": 8
+}

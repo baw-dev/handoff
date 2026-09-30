@@ -1,0 +1,49 @@
+{
+  "v": 2,
+  "project": "mystery-inc",
+  "limits": {
+    "hop_limit": 4
+  },
+  "sessions": [
+    {
+      "name": "fred",
+      "role": "hub",
+      "machine": "laptop",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "starts": true,
+      "reply": "untested",
+      "notes": "Plans the work, starts every chain, receives every report."
+    },
+    {
+      "name": "velma",
+      "role": "checker",
+      "machine": "laptop",
+      "model": "claude-fable-5-1",
+      "effort": "high",
+      "starts": false,
+      "reply": "untested",
+      "notes": "Reads a plan before work starts and a result after. Cleared before each review."
+    },
+    {
+      "name": "shaggy",
+      "role": "worker",
+      "machine": "laptop",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "starts": false,
+      "reply": "untested",
+      "notes": "Executes one work package and reports."
+    },
+    {
+      "name": "scooby",
+      "role": "worker",
+      "machine": "buildbox",
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "starts": false,
+      "reply": "untested",
+      "notes": "Executes one work package and reports. The same policy as shaggy."
+    }
+  ]
+}

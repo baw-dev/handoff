@@ -1,0 +1,5 @@
+# The directories that are this project, on this machine. One to a line.
+# A session whose working directory is one of these, or below one, is in the project.
+# This file differs from machine to machine; the roster does not.
+
+~/Projects/mystery-inc

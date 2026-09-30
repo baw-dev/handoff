@@ -1,0 +1,40 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, macos-latest]
+        python: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        shell: [sh, dash]
+        exclude:
+          - os: macos-latest
+            shell: dash
+          - os: macos-latest
+            python: "3.8"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Cases
+        run: |
+          if [ "${{ matrix.shell }}" = dash ]; then sudo apt-get install -y -qq dash; fi
+          ${{ matrix.shell }} skill/scripts/check.sh
+      - name: Install round trip
+        env:
+          CLAUDE_CONFIG_DIR: ${{ runner.temp }}/claude
+          HANDOFF_HOME: ${{ runner.temp }}/handoffs
+        run: |
+          ./install.sh
+          ./install.sh --check
