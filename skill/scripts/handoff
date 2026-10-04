@@ -64,7 +64,7 @@ import sys
 
 OK, REFUSED, DUPLICATE, MALFORMED = 0, 2, 3, 4
 
-__version__ = "1.0.0"  # the release; see CHANGES.md
+__version__ = "1.0.1"  # the release; see CHANGES.md
 VERSION = 1            # the note format, written as "v:" in every note
 GOAL_MAX = 100
 BODY_MAX = 8000

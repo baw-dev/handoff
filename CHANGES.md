@@ -9,6 +9,17 @@ roster format (`"v"` in `roster.json`, now 2). A change to either format is a
 major release. Each entry has a permanent anchor, `#vMAJOR.MINOR.PATCH`, and a
 matching git tag.
 
+<a id="v1.0.1"></a>
+## 1.0.1: a pointer for a target on the same machine (note format 1, roster format 2)
+
+- **Sending to a session on the same machine** now sends the note's first line
+  and the path of the stored note, instead of the whole text. The receiver
+  records it with `handoff receive --id` and reads the stored note, which the
+  script has already checked. A target on another machine still gets the
+  whole note, verbatim.
+- The script is unchanged apart from its version: `receive --id` already read
+  the stored note.
+
 <a id="v1.0.0"></a>
 ## 1.0.0: first public release (note format 1, roster format 2)
 
