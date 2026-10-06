@@ -12,11 +12,14 @@ Usage:
     handoff receive --id ID          (the note was minted on this machine)
     handoff receive                  < the message text, wrapper and all
     handoff status
+    handoff idle NAME
     handoff roster
     handoff close --chain C --reason "..."
 
 Exit status: 0 ok, 2 refused, 3 duplicate, 4 malformed or sum mismatch.  A refusal
 prints "REFUSED: <reason>" on stderr, prints nothing on stdout, and is logged.
+idle alone also exits 1: NAME holds an open or reported chain, and the chains are
+listed.
 
 Authority.  The note's own text is the authority for chain, hop and limit.  The
 ledger is per machine and per project; it dedupes and audits, and it is what makes
@@ -62,7 +65,7 @@ import re
 import secrets
 import sys
 
-OK, REFUSED, DUPLICATE, MALFORMED = 0, 2, 3, 4
+OK, NOT_IDLE, REFUSED, DUPLICATE, MALFORMED = 0, 1, 2, 3, 4
 
 __version__ = "1.0.1"  # the release; see CHANGES.md
 VERSION = 1            # the note format, written as "v:" in every note
@@ -748,9 +751,11 @@ def cmd_receive(args, roster, machine, ledger, t):
     return OK
 
 
-# --- status, close ---------------------------------------------------------
+# --- status, idle, close ---------------------------------------------------
 
-def cmd_status(args, roster, machine, ledger, t):
+def chains_in(ledger, t):
+    """Every chain in the ledger, oldest first: (state, holder, the row status
+    prints).  The holder is the session the chain's latest note is addressed to."""
     closed = {}
     for e in ledger:
         if e["event"] == "closed":
@@ -759,8 +764,7 @@ def cmd_status(args, roster, machine, ledger, t):
     for e in ledger:
         if e["event"] in ("sent", "received"):
             chains.setdefault(e["chain"], []).append(e)
-    counts = {"open": 0, "reported": 0, "closed": 0, "expired": 0}
-    rows = []
+    found = []
     for chain in sorted(chains, key=lambda c: chains[c][0]["ts"]):
         events = chains[chain]
         last = max(events, key=lambda e: e["hop"])
@@ -777,15 +781,28 @@ def cmd_status(args, roster, machine, ledger, t):
             state = "expired"
         else:
             state = "open"
-        counts[state] += 1
         hours = (t - parse_ts(events[0]["ts"])).total_seconds() / 3600
-        rows.append("%-28s hop %d/%d  %-8s holder %-20s age %.1fh%s"
-                    % (chain, last["hop"], last["limit"], state, last["to"], hours,
-                       why))
+        found.append((state, last["to"],
+                      "%-28s hop %d/%d  %-8s holder %-20s age %.1fh%s"
+                      % (chain, last["hop"], last["limit"], state, last["to"],
+                         hours, why)))
+    return found
+
+
+def heading(roster, machine):
+    return ("project %s, machine %s, hop_limit %d, ledger %s\n"
+            % (roster["project"], machine, roster["hop_limit"],
+               os.path.join(home(), "ledger.jsonl")))
+
+
+def cmd_status(args, roster, machine, ledger, t):
+    counts = {"open": 0, "reported": 0, "closed": 0, "expired": 0}
+    rows = []
+    for state, holder, row in chains_in(ledger, t):
+        counts[state] += 1
+        rows.append(row)
     refused = sum(1 for e in ledger if e["event"] == "refused")
-    sys.stdout.write("project %s, machine %s, hop_limit %d, ledger %s\n"
-                     % (roster["project"], machine, roster["hop_limit"],
-                        os.path.join(home(), "ledger.jsonl")))
+    sys.stdout.write(heading(roster, machine))
     for row in rows:
         sys.stdout.write(row + "\n")
     sys.stdout.write("chains %d: open %d, reported %d, closed %d, expired %d; "
@@ -793,6 +810,29 @@ def cmd_status(args, roster, machine, ledger, t):
                      % (len(rows), counts["open"], counts["reported"],
                         counts["closed"], counts["expired"], refused))
     return OK
+
+
+def cmd_idle(args, roster, machine, ledger, t):
+    """Whether a session may be restarted: it holds no open or reported chain.
+    Exit status 0 if so, NOT_IDLE if not."""
+    if args.name not in roster["sessions"]:
+        raise refuse("%s is not in the roster" % args.name)
+    counts = {"open": 0, "reported": 0}
+    rows = []
+    for state, holder, row in chains_in(ledger, t):
+        if holder == args.name and state in counts:
+            counts[state] += 1
+            rows.append(row)
+    sys.stdout.write(heading(roster, machine))
+    for row in rows:
+        sys.stdout.write(row + "\n")
+    if not rows:
+        sys.stdout.write("%s is idle: it holds no open or reported chain on this "
+                         "machine's ledger\n" % args.name)
+        return OK
+    sys.stdout.write("%s is not idle: chains %d: open %d, reported %d\n"
+                     % (args.name, len(rows), counts["open"], counts["reported"]))
+    return NOT_IDLE
 
 
 def cmd_roster(args, roster, machine, ledger, t):
@@ -880,6 +920,11 @@ def arguments():
 
     status = commands.add_parser("status", help="list chains")
     status.set_defaults(run=cmd_status)
+
+    idle = commands.add_parser("idle", help="exit 0 if NAME holds no open or "
+                               "reported chain here, else 1 and list them")
+    idle.add_argument("name", metavar="NAME")
+    idle.set_defaults(run=cmd_idle)
 
     roster = commands.add_parser("roster", help="the project, the limits in "
                                  "force and the sessions")

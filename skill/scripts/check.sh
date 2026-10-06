@@ -336,6 +336,51 @@ expect 2 "close: the chain again" on one close --chain "$CHAIN" --reason "abando
 expect 2 "close: a note on a closed chain is not received" on one receive --id "$ID"
 says     "  and it says the chain is closed" 'is closed'
 
+# --- idle: whether a session may be restarted ------------------------------------
+fresh
+expect 0 "idle: on an empty ledger" on one idle shaggy
+says     "  and it says so" '^shaggy is idle: it holds no open or reported chain'
+expect 2 "idle: a name not in the roster" on one idle nobody
+says     "  and it says so" 'nobody is not in the roster'
+expect 0 "idle: a chain to shaggy" on one $(start fred shaggy) "x"
+keep "$TMP/i1"
+CHAIN=${ID%.*}
+expect 1 "idle: shaggy, with a note sent to it and not yet received" on one idle shaggy
+says     "  and it lists the chain" "^$CHAIN +hop 1/6  open +holder shaggy "
+says     "  and it counts it" '^shaggy is not idle: chains 1: open 1, reported 0$'
+expect 0 "idle: fred, who sent it" on one idle fred
+expect 0 "idle: shaggy receives it" on one receive --id "$ID"
+expect 1 "idle: shaggy, holding it" on one idle shaggy
+NOW=2099-01-01T00:00:00Z
+expect 0 "idle: shaggy, once the chain has expired" on one idle shaggy
+NOW=
+expect 0 "idle: shaggy passes it to velma" on one send --parent "$ID" --to velma --goal "x"
+keep "$TMP/i2"
+expect 0 "idle: shaggy, having passed it on" on one idle shaggy
+expect 1 "idle: velma, to whom it went" on one idle velma
+expect 0 "idle: velma receives it" on one receive --id "$ID"
+STDIN="$TMP/report.body"
+expect 0 "idle: velma reports to fred" on one send --parent "$ID" --report --goal "x"
+keep "$TMP/i3"
+expect 0 "idle: velma, having reported" on one idle velma
+expect 1 "idle: fred, whose report is not yet received" on one idle fred
+says     "  and the chain reads reported" "^$CHAIN +hop 3/6  reported +holder fred "
+expect 0 "idle: fred receives the report" on one receive --id "$ID"
+expect 0 "idle: fred, once the chain is closed" on one idle fred
+STDIN="$TMP/work.body"
+expect 0 "idle: a chain to scooby, on two" on one $(start fred scooby) "x"
+keep "$TMP/i4"
+expect 1 "idle: scooby, seen from one's ledger" on one idle scooby
+expect 0 "idle: scooby, on two's ledger, before the note arrives" on two idle scooby
+STDIN="$TMP/i4"
+expect 0 "idle: scooby receives it on two" on two receive
+expect 1 "idle: scooby, on two, holding it" on two idle scooby
+STDIN="$TMP/report.body"
+expect 0 "idle: scooby reports" on two send --parent "$ID" --report --goal "x"
+expect 0 "idle: scooby, on two, having reported" on two idle scooby
+expect 1 "idle: fred, on two, where the report reads reported" on two idle fred
+STDIN="$TMP/work.body"
+
 # --- a roster the script will not read -------------------------------------------
 fresh
 bad() {  # bad TEXT: a roster holding TEXT, and use it
