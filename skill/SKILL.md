@@ -194,13 +194,59 @@ framing: a `HANDOFF` address line, a `sum:` line, or a footer marker.
 ```
 handoff roster                             the project, the limits, the sessions
 handoff status                             every chain, its hop, holder and state
+handoff idle <name>                        whether <name> holds an open or reported chain
 handoff close --chain <chain> --reason "..."   end a chain that was abandoned
 ```
 
 A chain reads `open` while a note is out, `reported` on the machine that sent its
 report, `closed` on the machine that received it, and `expired` past its deadline.
+A chain whose report was sent, then refused at `receive` past its deadline, stays
+`reported` until it is closed with `handoff close`.
 
-Exit statuses: 0 ok, 2 refused, 3 duplicate, 4 malformed or sum mismatch.
+Exit statuses: 0 ok, 2 refused, 3 duplicate, 4 malformed or sum mismatch. `idle`
+alone also exits 1: the name holds a chain, and the chains are listed.
+
+## Succession
+
+A hub is restarted only at a boundary your user picks, such as the end of a
+phase. Sessions cannot open sessions: your user starts the successor. Rulings
+and evidence live in files, never only in a conversation.
+
+**The outgoing hub:**
+
+1. Write a hand-off file in the project, from the template in the handoff
+   repository's `examples/mystery-inc/succession.md`: your role and standing
+   instructions, the state, the files the work rests on with the sha256 of
+   each, the next ids, the queue, what waits on your user, and what to do at
+   the next boundary.
+2. Stop your loop, if you run one.
+3. Offer your user a one-click card that starts the successor on this machine,
+   with a prompt that names the hand-off file and its sha256.
+4. Ask your user to retitle this session, so that your roster name routes to
+   the successor.
+5. Tell each worker, in plain words, that reports still go to your roster name
+   and are to be held, not sent to this session, until the successor says it
+   is up. Then end your turn and do no more work.
+
+**The successor:**
+
+1. Read the hand-off file, after checking its sha256 if the prompt gave one.
+2. Check the sha256 of every file it lists (`shasum -a 256` or `sha256sum`)
+   before acting on anything. If one differs or is missing, stop and tell your
+   user.
+3. Take the roster name. `ListAgents` must show it on exactly one row: this
+   session's. If not, stop and tell your user.
+4. Run `handoff roster` and `handoff status`, and compare the chains with the
+   file.
+5. Tell each worker you are up, then resume from the file.
+
+Restart a worker only between chains: when `handoff idle <name>` exits 0 on
+its machine and on the machine of every session that may send to it, in
+practice yours. `idle` sees only the ledger of the machine it runs on, and a
+note on its way is not in the receiver's ledger until it is received.
+
+For running a team across restarts with tokens low, see `docs/operating.md` in
+the handoff repository.
 
 ## What this does not do
 

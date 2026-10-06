@@ -93,6 +93,7 @@ You don't need this cast. Two sessions and one role each is a fine start.
 |---|---|
 | [docs/configuration.md](docs/configuration.md) | Every file, limit, roster field, option and variable |
 | [docs/protocol.md](docs/protocol.md) | The note, the chain, and what is refused |
+| [docs/operating.md](docs/operating.md) | Running a team across restarts: succession, `handoff idle`, models, effort and tokens |
 | [docs/verification.md](docs/verification.md) | What was tested, and what was not |
 
 For a second machine, repeat the quick start there with that machine's label and

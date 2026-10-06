@@ -9,6 +9,22 @@ roster format (`"v"` in `roster.json`, now 2). A change to either format is a
 major release. Each entry has a permanent anchor, `#vMAJOR.MINOR.PATCH`, and a
 matching git tag.
 
+<a id="v1.1.0"></a>
+## 1.1.0: running a team across restarts (note format 1, roster format 2)
+
+- **`handoff idle NAME`** exits 0 if NAME holds no open or reported chain on
+  this machine's ledger, and 1 otherwise, listing the chains. It answers
+  whether a session may be restarted. A name not in the roster is refused.
+- **Succession** in `SKILL.md`: what the outgoing hub and its successor do when
+  the hub is restarted at a boundary, with a hand-off file whose listed files
+  are checked by sha256 before the successor acts. A template is in
+  `examples/mystery-inc/succession.md`.
+- **`docs/operating.md`:** guidance on restarting workers, choosing a model and
+  effort per job, and keeping tokens low. It is advice; the script enforces
+  none of it.
+- `status` prints what it printed before; its state logic is now shared with
+  `idle`.
+
 <a id="v1.0.1"></a>
 ## 1.0.1: a pointer for a target on the same machine (note format 1, roster format 2)
 

@@ -69,6 +69,21 @@ push to the release commit.
 
 No live session took part. The workflow is `.github/workflows/ci.yml`.
 
+## 2026-10-05: release 1.1.0, the script's own cases
+
+`skill/scripts/check.sh` was run on the `succession` branch, before it was
+pushed. It now runs 174 checks, 30 of them for `handoff idle`.
+
+| On | Shell | Python | Result |
+|---|---|---|---|
+| macOS, arm64 | `sh` | 3.14.4 | Every case passed |
+| macOS, arm64 | `dash` | 3.14.4 | Every case passed |
+| macOS, arm64 | `sh` | 3.9.6 | Every case passed |
+
+CI has not run on this release: the branch has not been pushed. No live session
+has run `idle`, and no hub has been restarted by the succession steps. The
+guidance in `docs/operating.md` is advice drawn from use, not a tested result.
+
 ## Not tested
 
 - **The version 2 script between live sessions.** Every live test above ran on
@@ -83,6 +98,10 @@ No live session took part. The workflow is `.github/workflows/ci.yml`.
   different permission mode from the sender's.
 - **Python 3.8.** The script was written to run on it and has not been run on it.
   *2026-09-30: its cases now pass on Python 3.8 in CI (above), on Linux.*
+- **Succession between live sessions.** No outgoing hub has written a hand-off
+  file, and no successor has checked one and taken the roster name, under 1.1.0.
+- **`handoff idle` in a live session,** and on Linux. Its cases pass on macOS
+  only.
 - **Two projects in use on one machine at once.** The cases cover separate ledgers;
   no two real projects have run side by side.
 

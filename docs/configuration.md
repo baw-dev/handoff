@@ -72,12 +72,14 @@ the user's, and no project file raises them.
 ```
 handoff roster                                  the project, the limits, the sessions
 handoff status                                  every chain, its hop, holder and state
+handoff idle <name>                             exit 0 if <name> holds no open or reported chain here, else 1
 handoff send ...                                mint a note; the body is read from stdin
 handoff receive [--id <id>]                     validate and record a note
 handoff close --chain <chain> --reason "..."    end a chain that was abandoned
 ```
 
-Exit statuses: 0 ok, 2 refused, 3 duplicate, 4 malformed or sum mismatch.
+Exit statuses: 0 ok, 2 refused, 3 duplicate, 4 malformed or sum mismatch. `idle`
+alone also exits 1, and lists the chains `<name>` holds.
 
 ## Options when minting a note
 
@@ -111,7 +113,8 @@ A skill installed anywhere else is not what a receiver will be told to run.
 skill/SKILL.md            what a session reads
 skill/scripts/handoff     mints, validates and records notes
 skill/scripts/check.sh    runs the script's cases against throwaway state
-examples/mystery-inc/     a project to copy: a roster, a paths file, a rules file
+examples/mystery-inc/     a project to copy: a roster, a paths file, a rules file,
+                          and a hand-off file template for succession
 examples/limits.json      the default ceilings
 install.sh                copies skill/ into place, checks it, compares sums
 ```
